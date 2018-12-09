@@ -4,17 +4,17 @@ var initialFestival = null;
 
 function initTableauViz() {
     var containerDiv = document.getElementById("vizContainer"),
-        url = "http://tc-tabsrv-01/t/PerformingArts/views/ArtistFinder/TrackAudioFeatures?:embed=y&:showShareOptions=true&:display_count=no&:showVizHome=no",
+        url = "https://tableau.coenterprise.com/t/Sandbox/views/ArtistFinder/TrackAudioFeatures?:embed=y&:showShareOptions=true&:display_count=no&:showVizHome=no",
         options = {
             hideTabs: true,
             hideToolbar: true,
             allowFullScreen: false,
-            onFirstInteractive: function () {
+            onFirstInteractive: function() {
                 worksheet = viz.getWorkbook().getActiveSheet();
                 //Ideally we would want an option to ignore filters when using Get Data.
                 //This is a work around, we get the filters store them, clear filters to get the full Data-set
                 // And reply the filter afterwards
-                worksheet.getFiltersAsync().then(function(filters){
+                worksheet.getFiltersAsync().then(function(filters) {
                     if (filters !== null && filters !== undefined &&
                         filters[0].getAppliedValues().length === 1) {
                         initialFestival = filters[0].getAppliedValues()[0].value;
@@ -33,29 +33,29 @@ function initTableauViz() {
 //Uses the Get Data API to extract Data from Viz, parse Data and Construct D3 Diagram
 function getDataAndConstructGraph() {
     getDataOptions = {
-    	maxRows: 0,
-    	ignoreAliases: false,
-    	ignoreSelection: true,
-    	includeAllColumns: true
+        maxRows: 0,
+        ignoreAliases: false,
+        ignoreSelection: true,
+        includeAllColumns: true
     };
-    worksheet.getUnderlyingDataAsync(getDataOptions).then(function(dataTable){
-            if (initialFestival !== null) {
-                worksheet.applyFilterAsync('Festival', initialFestival, tableau.FilterUpdateType.REPLACE);
-            }
-            constructGraph(parseTableauData(dataTable));
-    }, function(error) {console.log(error);});
+    worksheet.getUnderlyingDataAsync(getDataOptions).then(function(dataTable) {
+        if (initialFestival !== null) {
+            worksheet.applyFilterAsync('Festival', initialFestival, tableau.FilterUpdateType.REPLACE);
+        }
+        constructGraph(parseTableauData(dataTable));
+    }, function(error) { console.log(error); });
 }
 
 //Set up the d3 diagram
 function constructGraph(data) {
-	var defaultLinkField = "Danceability";
-	var graphContainer = d3.select('#graph');
-	var notesContainer = d3.select('#notes')
-		.style({
-			'width': 140 + 'px',
-			'height': 600 + 'px'
-		});
-	networkDiagram = new NetworkDiagram(data, graphContainer, notesContainer);
+    var defaultLinkField = "Danceability";
+    var graphContainer = d3.select('#graph');
+    var notesContainer = d3.select('#notes')
+        .style({
+            'width': 140 + 'px',
+            'height': 600 + 'px'
+        });
+    networkDiagram = new NetworkDiagram(data, graphContainer, notesContainer);
 }
 
 //Parse the Data into the format expected
@@ -63,7 +63,8 @@ function parseTableauData(dataTable) {
     var columns = dataTable.getColumns();
     var data = dataTable.getData();
     var fieldNamesNeeded = ["Festival", "Artist Name", "PAUAffiliate?", "Track Preview URL",
-                            "Album Name", "Album Image URL"];
+        "Album Name", "Album Image URL"
+    ];
     var fieldNamesRetrieved = [];
     var fieldNamesIndexMap = {};
     columns.forEach(function(column) {
@@ -103,10 +104,10 @@ function parseTableauData(dataTable) {
             festivalInfoMap = {};
             festivalInfoMap[festival] = festivalInfo;
             artistNode = {
-                name : artistName,
-                affliated : (affliated === "Yes"),
-                festivals : [festival],
-                festivalInfoMap : festivalInfoMap
+                name: artistName,
+                affliated: (affliated === "Yes"),
+                festivals: [festival],
+                festivalInfoMap: festivalInfoMap
             }
             artistsMap[artistName] = artistNode;
         }
@@ -132,14 +133,14 @@ function handleSelectionEvent(selectionEvent) {
         });
 
         //For artists that have attended multiple festivals, we want to match the sound track to the festival
-        worksheet.getFiltersAsync().then(function (filters) {
+        worksheet.getFiltersAsync().then(function(filters) {
             try {
-             if (filters !== undefined && filters !== null && filters[0].getAppliedValues().length === 1) {
-                var currFestival = filters[0].getAppliedValues()[0].value;
-                networkDiagram.renderNetWork(artistName, currFestival);
-             } else {
-                networkDiagram.renderNetWork(artistName);
-             }
+                if (filters !== undefined && filters !== null && filters[0].getAppliedValues().length === 1) {
+                    var currFestival = filters[0].getAppliedValues()[0].value;
+                    networkDiagram.renderNetWork(artistName, currFestival);
+                } else {
+                    networkDiagram.renderNetWork(artistName);
+                }
             } catch (err) { console.dir(err); }
         });
     });
